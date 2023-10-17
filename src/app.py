@@ -154,6 +154,26 @@ def delete_one_user(user_id):
     db.session.commit()
     return jsonify({"msg": "user deleted succesfull"}), 200
 
+@app.route('/user/<int:user_id>/favorites', methods=['GET'])
+def get_favorites(user_id):
+    favorites = Favorites.query.filter_by(user_id = user_id).all()
+    if len(favorites) < 1:
+        return jsonify({"msg": "not found"}), 404
+    serialized_favorites = list(map(lambda x: x.serialize(), favorites))
+    return serialized_favorites, 200
+
+@app.route('/user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({"msg": f"user with id {user_id} not found"}), 404
+    body = json.loads(request.data)
+    user.email = body.get("email", user.email)
+    user.password = body.get("password", user.password)
+    user.is_active = body.get("is_active", user.is_active)
+    db.session.commit()
+    return jsonify({"msg": "User updated successfully"}), 200
+
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
